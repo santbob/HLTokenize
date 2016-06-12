@@ -57,7 +57,7 @@ public class HLTokenService {
         }
 
         //TODO: uncomment the below link to test with my server which returns the same json you send to it.
-        //mApiUrl = "https://93e24c4c.ngrok.io/v1/test";
+        mApiUrl = "https://5a14ce2b.ngrok.io/v1/hltokenize";
     }
 
     public void getToken(HLCard card, TokenCallback callback) {
@@ -101,6 +101,7 @@ public class HLTokenService {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     Log.d(TAG, error.toString());
+                    callback.onComplete(null);
                 }
             });
             AppController.getInstance().addToRequestQueue(req, TAG);

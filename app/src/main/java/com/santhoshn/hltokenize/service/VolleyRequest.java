@@ -47,7 +47,7 @@ public class VolleyRequest extends StringRequest {
     @Override
     public byte[] getBody() {
         try {
-            String jsonStr = mRequestBody == null ? null : JSONObject.quote(mRequestBody.toString());
+            String jsonStr = mRequestBody == null ? null : mRequestBody.toString();
             if (jsonStr != null) {
                 return jsonStr.getBytes(PROTOCOL_CHARSET);
             }

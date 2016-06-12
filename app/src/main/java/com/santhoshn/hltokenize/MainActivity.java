@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onComplete(HLToken response) {
                             hideProgressDialog();
                             if (response == null || response.getError() != null) {
-                                String message = (response == null) ? "Empty Response" : response.getError().getMessage();
+                                String message = (response == null) ? "Network Call Didnt result in status code 200" : response.getError().getMessage();
                                 Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
                             } else {
                                 if (resultTextView != null) {
