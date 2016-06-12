@@ -1,15 +1,24 @@
 package com.santhoshn.hltokenize.service;
 
 import android.os.AsyncTask;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.google.gson.Gson;
+import com.santhoshn.hltokenize.AppController;
+
+import org.json.JSONObject;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -17,6 +26,9 @@ import javax.net.ssl.HttpsURLConnection;
  * Created by santhosh on 09/06/16.
  */
 public class HLTokenService {
+
+    private static final String TAG = "HLTokenService";
+
     public interface TokenCallback {
         void onComplete(HLToken response);
     }
@@ -43,11 +55,59 @@ public class HLTokenService {
         } else {
             mApiUrl = "https://cert.api2.heartlandportico.com/Hps.Exchange.PosGateway.Hpf.v1/api/token";
         }
+
+        //TODO: uncomment the below link to test with my server which returns the same json you send to it.
+        //mApiUrl = "https://93e24c4c.ngrok.io/v1/test";
     }
 
     public void getToken(HLCard card, TokenCallback callback) {
-        TokenAsyncTask asyncTask = new TokenAsyncTask();
-        asyncTask.execute(new TokenTaskInput(card, callback));
+//        TokenAsyncTask asyncTask = new TokenAsyncTask();
+//        asyncTask.execute(new TokenTaskInput(card, callback));
+        executeWithVolley(card, callback);
+    }
+
+    public void executeWithVolley(final HLCard card, final TokenCallback callback) {
+        try {
+            JSONObject cardObject = new JSONObject();
+            cardObject.put("cvc", card.getCvv());
+            cardObject.put("exp_month", card.getExpMonth());
+            cardObject.put("exp_year", card.getExpYear());
+            cardObject.put("number", card.getNumber());
+
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("object", "token");
+            jsonObject.put("token_type", "supt");
+            jsonObject.put("card", cardObject);
+
+            byte[] creds = String.format("%s:", mPublicKey).getBytes();
+            String auth = String.format("Basic %s", Base64.encodeToString(creds, Base64.URL_SAFE));
+
+            Map<String, String> headers = new HashMap<String, String>();
+            headers.put("Authorization", auth);
+
+
+            VolleyRequest req = new VolleyRequest(Request.Method.POST, mApiUrl, headers, jsonObject, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    Log.d(TAG, response);
+                    Gson gson = new Gson();
+                    HLToken token = gson.fromJson(response, HLToken.class);
+                    if (TextUtils.isEmpty(token.getTokenValue())) {
+                        token.setToken_value("dummy token value, but successful return from server.");
+                    }
+                    callback.onComplete(token);
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.d(TAG, error.toString());
+                }
+            });
+            AppController.getInstance().addToRequestQueue(req, TAG);
+        } catch (Exception e) {
+            Log.d(TAG, "error " + e.toString());
+        }
+
     }
 
     private class TokenAsyncTask extends AsyncTask<TokenTaskInput, Void, HLToken> {
@@ -72,7 +132,7 @@ public class HLTokenService {
                 conn.setDoOutput(true);
                 conn.setDoInput(true);
                 conn.setRequestMethod("POST");
-                conn.addRequestProperty("Authorization", auth.trim());
+                //conn.addRequestProperty("Authorization", auth.trim());
                 conn.addRequestProperty("Content-Type", "application/json");
                 conn.addRequestProperty("Content-Length", String.format("%s", bytes.length));
 
@@ -91,13 +151,13 @@ public class HLTokenService {
                         tokenObject = gson.fromJson(errorStream, HLToken.class);
                         errorStream.close();
                     } else {
-                        Log.d("HeartLand", "IOException occured " + e.toString());
+                        Log.d(TAG, "IOException occured " + e.toString());
                         throw new IOException(e);
                     }
                 }
 
             } catch (Exception e) {
-                Log.d("HeartLand", "Exception occured " + e.toString());
+                Log.d(TAG, "Exception occured " + e.toString());
             }
 
             return tokenObject;

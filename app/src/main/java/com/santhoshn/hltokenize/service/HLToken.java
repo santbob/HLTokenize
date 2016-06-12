@@ -11,7 +11,8 @@ public class HLToken {
     private Card card;
     private HLError error;
 
-    public HLToken() {}
+    public HLToken() {
+    }
 
     public HLToken(String number, String cvc, int expMonth, int expYear) {
         this.object = "token";
@@ -35,6 +36,18 @@ public class HLToken {
 
     public String getTokenValue() {
         return token_value;
+    }
+
+    public void setToken_value(String token_value) {
+        this.token_value = token_value;
+    }
+
+    public void setToken_expire(String token_expire) {
+        this.token_expire = token_expire;
+    }
+
+    public void setToken_type(String token_type) {
+        this.token_type = token_type;
     }
 
     public String getTokenExpire() {
