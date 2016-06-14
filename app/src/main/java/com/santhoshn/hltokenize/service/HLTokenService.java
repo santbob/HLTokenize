@@ -10,6 +10,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.gson.Gson;
 import com.santhoshn.hltokenize.AppController;
+import com.santhoshn.hltokenize.service.TLSSocketFactory;
 
 import org.json.JSONObject;
 
@@ -57,13 +58,13 @@ public class HLTokenService {
         }
 
         //TODO: uncomment the below link to test with my server which returns the same json you send to it.
-        mApiUrl = "https://712f09db.ngrok.io/v1/hltokenize";
+//        mApiUrl = "https://712f09db.ngrok.io/v1/hltokenize";
     }
 
     public void getToken(HLCard card, TokenCallback callback) {
-//        TokenAsyncTask asyncTask = new TokenAsyncTask();
-//        asyncTask.execute(new TokenTaskInput(card, callback));
-        executeWithVolley(card, callback);
+        TokenAsyncTask asyncTask = new TokenAsyncTask();
+        asyncTask.execute(new TokenTaskInput(card, callback));
+//        executeWithVolley(card, callback);
     }
 
     public void executeWithVolley(final HLCard card, final TokenCallback callback) {
@@ -119,7 +120,9 @@ public class HLTokenService {
             this.taskInput = inputParams[0];
             HLToken tokenObject = null;
             try {
+                TLSSocketFactory sf = new TLSSocketFactory();
                 HttpsURLConnection conn = (HttpsURLConnection) new URL(mApiUrl).openConnection();
+                conn.setSSLSocketFactory(sf);
 
                 //converting the publickey to base64 format and adding as Basic Authorization.
                 byte[] creds = String.format("%s:", mPublicKey).getBytes();
@@ -133,7 +136,7 @@ public class HLTokenService {
                 conn.setDoOutput(true);
                 conn.setDoInput(true);
                 conn.setRequestMethod("POST");
-                //conn.addRequestProperty("Authorization", auth.trim());
+                conn.addRequestProperty("Authorization", auth.trim());
                 conn.addRequestProperty("Content-Type", "application/json");
                 conn.addRequestProperty("Content-Length", String.format("%s", bytes.length));
 
