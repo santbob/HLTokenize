@@ -57,7 +57,7 @@ public class HLTokenService {
         }
 
         //TODO: uncomment the below link to test with my server which returns the same json you send to it.
-        mApiUrl = "https://5a14ce2b.ngrok.io/v1/hltokenize";
+        mApiUrl = "https://712f09db.ngrok.io/v1/hltokenize";
     }
 
     public void getToken(HLCard card, TokenCallback callback) {
